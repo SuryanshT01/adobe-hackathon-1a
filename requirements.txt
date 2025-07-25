@@ -1,0 +1,6 @@
+pymupdf
+lightgbm
+numpy
+pandas
+scikit-learn
+pytesseract
