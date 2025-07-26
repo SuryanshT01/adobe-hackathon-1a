@@ -85,6 +85,7 @@ def extract_text_blocks(pdf_path: str) -> List[Dict[str, Any]]:
     all_blocks = []
     for page_num, page in enumerate(doc):
         page_height = page.rect.height
+        page_width = page.rect.width
         
         # CRITICAL FIX: Apply OCR check to every page, not just the first.
         if is_scanned_page(page):
@@ -92,6 +93,7 @@ def extract_text_blocks(pdf_path: str) -> List[Dict[str, Any]]:
             if ocr_blocks:
                 for block in ocr_blocks:
                     block['page_height'] = page_height
+                    block['page_width'] = page_width
                 all_blocks.extend(ocr_blocks)
         else:
             blocks = page.get_text("dict").get("blocks", [])
@@ -100,6 +102,7 @@ def extract_text_blocks(pdf_path: str) -> List[Dict[str, Any]]:
                     block['page_num'] = page_num
                     block['source'] = 'pymupdf'
                     block['page_height'] = page_height
+                    block['page_width'] = page_width
                     all_blocks.append(block)
     
     doc.close()

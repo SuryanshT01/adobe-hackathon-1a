@@ -1,6 +1,6 @@
 import os
 from src.data_processing.pdf_parser import extract_text_blocks
-from src.data_processing.heuristics import find_title, classify_numbered_heading, classify_styled_heading, filter_headers_footers, get_document_stats
+from src.data_processing.heuristics import find_title, classify_numbered_heading, classify_styled_heading, remove_headers_footers_tables, get_document_stats
 
 PDF_DIR = 'data/raw_pdfs'
 
@@ -28,17 +28,17 @@ def main():
         # Print extracted title
         title = find_title(blocks)
         print(f'  Extracted Title: {title}')
-        # Compute doc stats for heading and header/footer filtering
+        # Compute doc stats for heading and header/footer/table filtering
         doc_stats = get_document_stats(blocks)
-        # Test filter_headers_footers
-        filtered_blocks = filter_headers_footers(blocks, num_pages, doc_stats)
-        print(f'  Blocks after header/footer filter: {len(filtered_blocks)} (was {len(blocks)})')
+        # Test remove_headers_footers_tables (includes table text exclusion)
+        filtered_blocks = remove_headers_footers_tables(blocks, num_pages, doc_stats)
+        print(f'  Blocks after header/footer/table filter: {len(filtered_blocks)} (was {len(blocks)})')
         # Print all detected headings (H1, H2, H3) in filtered blocks
         print('  Detected Headings:')
         for i, block in enumerate(filtered_blocks):
-            heading_level = classify_numbered_heading(block)
+            heading_level = classify_numbered_heading(block, filtered_blocks, doc_stats)
             if not heading_level:
-                heading_level = classify_styled_heading(block, doc_stats)
+                heading_level = classify_styled_heading(block, doc_stats, filtered_blocks)
             if heading_level:
                 text = " ".join(span['text'] for line in block.get('lines', []) for span in line.get('spans', []))
                 print(f'    {heading_level} | Page {block.get("page_num")} | {text[:80]}')
