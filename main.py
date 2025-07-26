@@ -12,7 +12,8 @@ from src.data_processing.pdf_parser import extract_text_blocks
 from src.data_processing.heuristics import (
     get_document_stats, find_title, 
     classify_numbered_heading, classify_styled_heading,
-    remove_headers_footers_tables, is_table_block
+    remove_headers_footers_tables, is_table_block,
+    is_title_block, clean_heading_text
 )
 from src.data_processing.feature_engineering import create_feature_vector
 from src.models.prediction import StructurePredictor
@@ -28,7 +29,7 @@ ORIGINAL_TEST_FILES = [
     'file02.pdf', 
     'file03.pdf',
     'file04.pdf',
-    'file05.pdf'
+    'file05.pdf',
 ]
 
 def process_pdf(pdf_path: str) -> dict:
@@ -43,28 +44,35 @@ def process_pdf(pdf_path: str) -> dict:
     all_blocks = extract_text_blocks(pdf_path)
     if not all_blocks:
         print(f"Warning: No text blocks found in {os.path.basename(pdf_path)}.")
-        return {"title": os.path.basename(pdf_path), "outline": []}
+        return {"title": "", "outline": []}
 
     num_pages = max(b.get('page_num', 0) for b in all_blocks) + 1
     doc_stats = get_document_stats(all_blocks)
 
-    # 2. Enhanced Preprocessing: Remove headers, footers, and table text
+    # 2. Title Extraction (enhanced with special case handling)
+    title = find_title(all_blocks)
+    # Special case for file05.pdf - if no meaningful title found, use empty string
+    if not title or title.lower() == os.path.basename(pdf_path).lower():
+        title = ""
+    print(f"  - Extracted title: '{title[:50]}{'...' if len(title) > 50 else ''}'")
+
+    # 3. Enhanced Preprocessing: Remove headers, footers, and table text
     print(f"  - Filtering headers, footers, and table text...")
     filtered_blocks = remove_headers_footers_tables(all_blocks, num_pages, doc_stats)
     print(f"  - Reduced from {len(all_blocks)} to {len(filtered_blocks)} blocks after filtering")
-
-    # 3. Title Extraction (enhanced with special case handling)
-    title = find_title(all_blocks) or os.path.basename(pdf_path)
-    print(f"  - Extracted title: '{title[:50]}{'...' if len(title) > 50 else ''}'")
     
     headings = []
     blocks_for_ml = []
     
-    # 4. Enhanced Heuristic Classification with Table Exclusion
+    # 4. Enhanced Heuristic Classification with Title Exclusion
     print(f"  - Applying heuristic classification...")
     for block in filtered_blocks:
         # Skip table blocks from heading classification
         if is_table_block(block, filtered_blocks, doc_stats):
+            continue
+            
+        # Skip blocks that contain the title
+        if is_title_block(block, title):
             continue
             
         # First, try numbered heading classification
@@ -76,14 +84,15 @@ def process_pdf(pdf_path: str) -> dict:
         
         if level:
             text = "".join(span['text'] for line in block['lines'] for span in line['spans']).strip()
-            # Clean up the text (remove extra whitespace, page numbers, etc.)
-            text = ' '.join(text.split())  # Normalize whitespace
-            headings.append({
-                'level': level, 
-                'text': text, 
-                'page': block['page_num'], 
-                'y_pos': block['bbox'][1]  # Use y0 for sorting
-            })
+            # Clean up the text using the new cleaning function
+            text = clean_heading_text(text)
+            if text:  # Only add if text is not empty after cleaning
+                headings.append({
+                    'level': level, 
+                    'text': text, 
+                    'page': block['page_num'], 
+                    'y_pos': block['bbox'][1]  # Use y0 for sorting
+                })
         else:
             blocks_for_ml.append(block)
 
@@ -105,6 +114,10 @@ def process_pdf(pdf_path: str) -> dict:
             if is_table_block(block, filtered_blocks, doc_stats):
                 continue
                 
+            # Skip blocks that contain the title
+            if is_title_block(block, title):
+                continue
+                
             page_num = block.get('page_num', 0)
             page = doc[page_num]
             features = create_feature_vector(
@@ -121,26 +134,25 @@ def process_pdf(pdf_path: str) -> dict:
             for block, label in zip(valid_blocks, predictions):
                 if label in ["H1", "H2", "H3"]:
                     text = "".join(span['text'] for line in block['lines'] for span in line['spans']).strip()
-                    text = ' '.join(text.split())  # Normalize whitespace
-                    headings.append({
-                        'level': label, 
-                        'text': text, 
-                        'page': block['page_num'], 
-                        'y_pos': block['bbox'][1]
-                    })
+                    text = clean_heading_text(text)
+                    if text:  # Only add if text is not empty after cleaning
+                        headings.append({
+                            'level': label, 
+                            'text': text, 
+                            'page': block['page_num'], 
+                            'y_pos': block['bbox'][1]
+                        })
             print(f"  - ML added {len([p for p in predictions if p in ['H1', 'H2', 'H3']])} headings")
 
     # 6. Final Sorting, Validation, and Formatting
     print(f"  - Finalizing outline...")
     headings.sort(key=lambda x: (x['page'], x['y_pos']))
     
-    # Remove temporary keys and clean up text
+    # Remove temporary keys and final text cleaning
     for h in headings:
         del h['y_pos']
-        # Additional text cleaning
-        h['text'] = h['text'].strip()
-        # Remove trailing punctuation that shouldn't be in headings
-        h['text'] = h['text'].rstrip('.,:;')
+        # Final text cleaning
+        h['text'] = clean_heading_text(h['text'])
 
     # Apply hierarchical validation
     final_outline = validate_hierarchy(headings)

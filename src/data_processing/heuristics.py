@@ -20,7 +20,7 @@ def find_title(blocks: List[Dict[str, Any]]) -> str:
     """
     A highly robust heuristic to find the document title. It scores lines on
     the first page and intelligently combines the best candidates into a
-    multi-line title if necessary.[4, 5]
+    multi-line title if necessary.
     Special case: If the first page contains a block with 'RFP' and another with 'To Present a Proposal',
     clean up the RFP block, concatenate both, and use as title (for file03.pdf and similar).
     """
@@ -105,12 +105,40 @@ def find_title(blocks: List[Dict[str, Any]]) -> str:
                 title_parts.append(cand)
 
     title_parts.sort(key=lambda x: x['y0'])
-    return " ".join(p['text'] for p in title_parts).replace('  ', ' ').strip()
+    title = " ".join(p['text'] for p in title_parts).replace('  ', ' ').strip()
+    
+    # Special case: if title looks like a filename or is too generic, return empty
+    if re.match(r'^file\d+\.pdf$', title.lower()) or len(title) < 3:
+        return ""
+    
+    return title
+
+def is_title_block(block: Dict[str, Any], title: str) -> bool:
+    """
+    Determines if a block contains the document title to exclude it from headings.
+    """
+    if not title:
+        return False
+    
+    block_text = "".join(span['text'] for line in block.get('lines', []) for span in line.get('spans', [])).strip()
+    block_text = ' '.join(block_text.split())  # Normalize whitespace
+    
+    # Check if this block contains the title text
+    title_words = set(title.lower().split())
+    block_words = set(block_text.lower().split())
+    
+    # If more than 70% of title words are in this block, consider it a title block
+    if len(title_words) > 0:
+        overlap = len(title_words.intersection(block_words))
+        if overlap / len(title_words) > 0.7:
+            return True
+    
+    return False
 
 def classify_numbered_heading(block: Dict[str, Any], blocks: List[Dict[str, Any]] = None, doc_stats: Dict[str, float] = None) -> Optional[str]:
     """
     Classifies a block as H1, H2, or H3 if it starts with a hierarchical
-    numbering pattern and is followed by sufficient text.[11, 12]
+    numbering pattern and is followed by sufficient text.
     """
     # Skip table blocks from heading classification
     if blocks is not None and doc_stats is not None and is_table_block(block, blocks, doc_stats):
@@ -118,7 +146,8 @@ def classify_numbered_heading(block: Dict[str, Any], blocks: List[Dict[str, Any]
     
     full_text = "".join(span['text'] for line in block.get('lines', []) for span in line.get('spans', [])).strip()
     
-    match = re.match(r'^\s*(\d+(\.\d+)*)\.?\s+(.*)', full_text)
+    # More specific pattern matching to avoid concatenated text
+    match = re.match(r'^\s*(\d+(\.\d+)*)\.?\s+([^0-9]+?)(?:\s+\d+\.\d+|\s+\d+$|$)', full_text)
     
     if match:
         num_str, remaining_text = match.group(1), match.group(3)
@@ -133,7 +162,7 @@ def classify_numbered_heading(block: Dict[str, Any], blocks: List[Dict[str, Any]
 def classify_styled_heading(block: Dict[str, Any], doc_stats: Dict[str, float], blocks: List[Dict[str, Any]] = None) -> Optional[str]:
     """
     Classifies a block as a heading based on styling cues like font size,
-    boldness, word count, and text case.[7, 8]
+    boldness, word count, and text case.
     """
     # Skip table blocks from heading classification
     if blocks is not None and is_table_block(block, blocks, doc_stats):
@@ -172,7 +201,7 @@ def classify_styled_heading(block: Dict[str, Any], doc_stats: Dict[str, float], 
 def filter_headers_footers(blocks: List[Dict[str, Any]], num_pages: int, doc_stats: Dict[str, float]) -> List[Dict[str, Any]]:
     """
     Filters out headers and footers by identifying text that repeats across
-    many pages, but now ignores text with large fonts to protect headings.[13]
+    many pages, but now ignores text with large fonts to protect headings.
     """
     if num_pages < 3:
         return blocks
@@ -336,3 +365,35 @@ def remove_headers_footers_tables(blocks: List[Dict[str, Any]], num_pages: int, 
             final_blocks.append(block)
     
     return final_blocks
+
+def clean_heading_text(text: str) -> str:
+    """
+    Cleans heading text by removing unwanted elements and normalizing format.
+    """
+    # Remove page numbers at the end
+    text = re.sub(r'\s+\d+\s*$', '', text)
+    
+    # Remove extra whitespace and normalize
+    text = ' '.join(text.split())
+    
+    # Remove trailing punctuation that shouldn't be in headings
+    text = text.rstrip('.,:;')
+    
+    # Remove common unwanted patterns
+    text = re.sub(r'^\d+\.\s*', '', text)  # Remove leading numbers
+    text = re.sub(r'\s+-\s*$', '', text)   # Remove trailing dashes
+    
+    # Fix concatenated text issues (e.g., "2.1 Intended Audience 7 2.2 Career Paths")
+    # Split on patterns like "2.2", "3.1", etc. and take only the first part
+    match = re.match(r'^(\d+\.\d+\s+[^0-9]+?)(?:\s+\d+\.\d+|\s+\d+$)', text)
+    if match:
+        text = match.group(1).strip()
+    
+    # Remove trailing numbers that are page numbers
+    text = re.sub(r'\s+\d+\s*$', '', text)
+    
+    # Clean up any remaining artifacts
+    text = re.sub(r'\s+', ' ', text)  # Normalize multiple spaces
+    text = text.strip()
+    
+    return text
