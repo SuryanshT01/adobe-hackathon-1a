@@ -1,32 +1,54 @@
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
-def get_document_stats(blocks: List[Dict[str, Any]]) -> Dict[str, float]:
-    """Calculates font size statistics across the document."""
-    font_sizes = [span['size'] for block in blocks for line in block.get('lines', []) for span in line.get('spans', [])]
-    if not font_sizes:
-        return {'median_size': 12.0, 'std_dev_size': 1.0}
-    return {
-        'median_size': np.median(font_sizes),
-        'std_dev_size': np.std(font_sizes) if len(font_sizes) > 1 else 1.0
-    }
-
-def create_feature_vector(block: Dict[str, Any], doc_stats: Dict[str, float]) -> Dict[str, Any]:
-    """Creates a feature vector for a text block."""
-    spans = [span for line in block.get('lines', []) for span in line.get('spans', [])]
-    if not spans:
+def create_feature_vector(
+    block: Dict[str, Any], 
+    doc_stats: Dict[str, float], 
+    page_width: float, 
+    page_height: float,
+    prev_block: Optional[Dict[str, Any]]
+) -> Optional[Dict[str, Any]]:
+    """
+    Creates a numerical feature vector for a single text block, making it
+    ready for the machine learning model.
+    """
+    # Ignore blocks from OCR as they lack reliable style metadata
+    if block.get('source') == 'ocr':
         return None
 
-    full_text = " ".join(s['text'] for s in spans).strip()
-    avg_font_size = np.mean([s['size'] for s in spans])
-    features = {
-        'font_size_ratio': avg_font_size / (doc_stats['median_size'] + 1e-6),
-        'is_bold': any('bold' in s['font'].lower() for s in spans),
-        'word_count': len(full_text.split()),
-        'is_all_caps': full_text.isupper() and len(full_text) > 1,
-        'x_position': block['bbox'][0],
-        'y_position': block['bbox'][1],
-        'block_width': block['bbox'][2] - block['bbox'][0],
-        'block_height': block['bbox'][3] - block['bbox'][1]
-    }
-    return features
+    try:
+        spans = [span for line in block.get('lines', []) for span in line.get('spans', [])]
+        if not spans:
+            return None
+
+        full_text = " ".join(s.get('text', '').strip() for s in spans).strip()
+        if not full_text:
+            return None
+
+        # --- Feature Calculation ---
+        avg_font_size = np.mean([s.get('size', 12.0) for s in spans])
+        x0, y0, x1, y1 = block['bbox']
+        
+        # Contextual feature: vertical space to the previous block
+        space_above = y0 - prev_block['bbox'][1] if prev_block else y0
+
+        features = {
+            # Font-Based Features [4]
+            'font_size_ratio': avg_font_size / (doc_stats.get('median_size', 12.0) + 1e-6),
+            'is_bold': int(any('bold' in s.get('font', '').lower() for s in spans)),
+            
+            # Content-Based Features [4]
+            'word_count': len(full_text.split()),
+            'is_all_caps': int(full_text.isupper() and len(full_text) > 1),
+            'is_title_case': int(full_text.istitle() and len(full_text) > 1),
+            
+            # Positional & Layout Features [5]
+            'x_position_norm': x0 / page_width,
+            'y_position_norm': y0 / page_height,
+            'block_width_norm': (x1 - x0) / page_width,
+            'block_height': y1 - y0,
+            'space_above': space_above,
+        }
+        return features
+    except (IndexError, KeyError, ZeroDivisionError):
+        return None
