@@ -22,6 +22,15 @@ from src.utils.validation import validate_hierarchy
 MODEL_PATH = './models/lgbm_model.joblib'
 ENCODER_PATH = './models/label_encoder.joblib'
 
+# Original 5 test PDFs for evaluation
+ORIGINAL_TEST_FILES = [
+    'file01.pdf',
+    'file02.pdf', 
+    'file03.pdf',
+    'file04.pdf',
+    'file05.pdf'
+]
+
 def process_pdf(pdf_path: str) -> dict:
     """
     Main processing function for a single PDF file. This function orchestrates
@@ -144,11 +153,14 @@ def process_pdf(pdf_path: str) -> dict:
 
 def main():
     """
-    Main function to discover PDFs, process them in parallel, and write JSON outputs.
+    Main function to process only the original 5 test PDFs for evaluation.
+    This allows testing model improvements while training on a larger dataset.
     """
     parser = argparse.ArgumentParser(description="Extracts a structured outline from PDF files.")
     parser.add_argument("input_dir", type=str, help="The directory containing input PDF files.")
     parser.add_argument("output_dir", type=str, help="The directory where JSON output will be saved.")
+    parser.add_argument("--test-only", action="store_true", 
+                       help="Only process the original 5 test files (file01.pdf through file05.pdf)")
     args = parser.parse_args()
 
     if not os.path.isdir(args.input_dir):
@@ -157,9 +169,32 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    pdf_files = [os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir) if f.lower().endswith('.pdf')]
+    # Filter to only the original 5 test files
+    all_pdf_files = [os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir) if f.lower().endswith('.pdf')]
+    
+    if args.test_only:
+        # Only process the original 5 test files
+        pdf_files = []
+        for test_file in ORIGINAL_TEST_FILES:
+            test_path = os.path.join(args.input_dir, test_file)
+            if os.path.exists(test_path):
+                pdf_files.append(test_path)
+            else:
+                print(f"Warning: {test_file} not found in {args.input_dir}")
+        
+        if not pdf_files:
+            print(f"Error: None of the original test files found in {args.input_dir}")
+            print(f"Expected files: {ORIGINAL_TEST_FILES}")
+            return
+            
+        print(f"Processing only the original 5 test files for evaluation...")
+    else:
+        # Process all PDF files (original behavior)
+        pdf_files = all_pdf_files
+        print(f"Processing all PDF files in {args.input_dir}...")
+
     if not pdf_files:
-        print(f"No PDF files found in {args.input_dir}.")
+        print(f"No PDF files found to process.")
         return
 
     # Use multiprocessing to process PDFs in parallel

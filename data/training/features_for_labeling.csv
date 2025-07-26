@@ -1,4 +1,34 @@
 font_size_ratio,is_bold,word_count,is_all_caps,is_title_case,x_position_norm,y_position_norm,block_width_norm,block_height,space_above,pdf_file,page_num,text_preview,label
+1.315067167,1,2,0,1,0.119046489,0.124000147,0.088519005,20.42899323,104.3944855,file06.pdf,0,Dune 3D,Body_Text
+0.999999908,0,15,0,0,0.119046489,0.169077997,0.746784448,15.53456116,37.95059204,file06.pdf,0,"Dune 3D is a parametric 3D CAD application that supports STEP import/export, fil",Body_Text
+1.09589238,1,1,0,1,0.119046489,0.613848482,0.096078613,17.02423096,374.4478302,file06.pdf,0,Motivation,H1
+0.999999908,0,49,0,0,0.119046489,0.650980612,0.761903588,64.31152344,31.26116943,file06.pdf,0,So why another open‑source 3D CAD application when FreeCAD and Solvespace exist?,Body_Text
+0.999999908,0,46,0,0,0.118332547,0.735330111,0.765806885,48.05249023,71.01300049,file06.pdf,0,"While FreeCAD technically does everything I need, the way it’s implemented isn’t",Body_Text
+0.999999908,0,26,0,0,0.119046489,0.800368231,0.761884927,31.79351807,54.75494385,file06.pdf,0,"Solvespace on the other hand gets the workflow part right, but falls short by no",Body_Text
+0.999999908,0,1,0,0,0.871838482,0.902373331,0.009108006,15.5345459,85.8770752,file06.pdf,0,1,Body_Text
+0.999999908,0,37,0,0,0.118386299,0.128180731,0.762545219,31.79356384,-651.7850189,file06.pdf,1,"Having solved the similar problem for PCB CAD by developing Horizon EDA, I began",Body_Text
+0.981250085,0,191,0,0,0.150109189,0.175273585,0.733699886,226.9015656,39.64700317,file06.pdf,1,"• Geometry kernel to do extrusions, intersections, chamfers, etc.: While it’s no",Body_Text
+0.999999908,0,27,0,0,0.118332547,0.454115213,0.765825033,31.7935791,234.7539825,file06.pdf,1,"With all of the building blocks available, I set out to glue them together to fo",Body_Text
+1.09589238,1,3,0,0,0.119046489,0.517350096,0.112948613,17.02420044,53.23681641,file06.pdf,1,How to build,H1
+0.999999908,0,4,0,0,0.119046489,0.553389467,0.199276448,15.53457642,30.34118652,file06.pdf,1,See the build instructions.,Body_Text
+1.09589238,1,3,0,0,0.119046489,0.597311884,0.097805788,17.02423096,36.97784424,file06.pdf,1,How to use,H1
+0.999999908,0,14,0,0,0.119046489,0.633351255,0.629241332,15.5345459,30.34118652,file06.pdf,1,"Similar to Horizon EDA, all tools and actions are available from the spacebar me",Body_Text
+0.999999908,0,10,0,0,0.119046489,0.658672844,0.427618878,15.5345459,21.31799316,file06.pdf,1,Use the “set workplane” tool to set a group’s workplane.,Body_Text
+0.999999908,0,5,0,0,0.118552606,0.683993273,0.265964374,15.5345459,21.3170166,file06.pdf,1,Also check out the documentation.,Body_Text
+1.09589238,1,2,0,0,0.119046489,0.727915618,0.193743805,17.02423096,36.9777832,file06.pdf,1,Anticipated questions,H1
+0.999999908,1,6,0,0,0.119046489,0.763954989,0.23070602,15.5345459,30.34118652,file06.pdf,1,Where do I find sample files?,Body_Text
+0.999999908,0,4,0,0,0.119046489,0.798723184,0.210803385,15.5345459,29.27099609,file06.pdf,1,See the samples repository.,Body_Text
+0.753426011,0,51,0,0,0.12828248,0.822325923,0.755013217,34.8805542,19.87091064,file06.pdf,1,1I ended up directly using solvespace’s solver instead of the suggested wrapper ,Body_Text
+0.999999908,0,1,0,0,0.871838482,0.902373331,0.009108006,15.5345459,67.39111328,file06.pdf,1,2,Body_Text
+0.999999908,1,5,0,0,0.119046489,0.128180731,0.197499264,15.53456116,-651.7850189,file06.pdf,2,Does it run on Windows?,Body_Text
+0.999999908,0,10,0,0,0.119046489,0.164040525,0.420911348,15.53456116,30.19000244,file06.pdf,2,See the build instructions for how to build on Windows.,Body_Text
+0.999999908,1,5,0,0,0.119046489,0.210919583,0.18115251,15.53456116,39.4670105,file06.pdf,2,Does it run on macOS?,Body_Text
+0.999999908,0,10,0,0,0.119046489,0.246778181,0.405810715,15.53456116,30.18899536,file06.pdf,2,See the build instructions for how to build on macOS.,Body_Text
+0.999999908,1,7,0,0,0.119046489,0.293658398,0.307840107,15.53456116,39.46798706,file06.pdf,2,Why not integrate it into Horizon EDA?,Body_Text
+0.999999908,0,29,0,0,0.118552606,0.329517014,0.762398291,31.79354858,30.18901062,file06.pdf,2,There’s no place in Horizon EDA where a 3D CAD would make sense to implement. Al,Body_Text
+0.999999908,1,6,0,0,0.119046489,0.395709734,0.334009616,15.53457642,55.72698975,file06.pdf,2,Why not improve Solvespace or FreeCAD?,Body_Text
+0.999999908,0,39,0,0,0.119046489,0.431568331,0.761885132,48.05258179,30.18899536,file06.pdf,2,Making FreeCAD parametric in 3D or putting Open CASCADE into Solvespace seemed t,Body_Text
+0.999999908,0,1,0,0,0.871838482,0.902373331,0.009108006,15.5345459,396.3660278,file06.pdf,2,3,Body_Text
 1.602409475,0,4,0,0,0.155948689,0.09101517,0.233991311,45.03909302,72.08401489,file03.pdf,0,Ontario’s Libraries Working Together,Body_Text
 3.216867227,0,25,0,0,0.147098529,0.197621143,0.66565723,45.40071106,84.43193054,file03.pdf,0,RFP: RRFP: RRFP: RRFP: Request fquest fquest fquest for Prr Prr Prr Proposalopos,Body_Text
 2.409638303,0,14,0,0,0.215360454,0.313636356,0.572321773,81.98400879,91.88404846,file03.pdf,0,To Present a Proposal for Developing the Business Plan for the Ontario Digital L,Body_Text
@@ -56,15 +86,15 @@ font_size_ratio,is_bold,word_count,is_all_caps,is_title_case,x_position_norm,y_p
 1.108433616,1,2,0,1,0.147058337,0.490285469,0.205686794,12.32064819,25.32574463,file03.pdf,4,Technological Support:,H3
 1.108433616,0,29,0,0,0.176462261,0.506343649,0.673371907,37.51394653,12.71807861,file03.pdf,4,of common standards for the preservation and archiving local digital content of ,Body_Text
 1.108433616,0,6,0,0,0.14705835,0.588613915,0.294490216,15.5553894,65.15805054,file03.pdf,4,What could the ODL really mean?,H3
-1.108433616,1,7,0,0,0.147058325,0.623448497,0.320782281,12.32064819,27.58898926,file03.pdf,4,For each Ontario citizen it could mean:,H4
+1.108433616,1,7,0,0,0.147058325,0.623448497,0.320782281,12.32064819,27.58898926,file03.pdf,4,For each Ontario citizen it could mean:,H3
 1.108433616,0,72,0,0,0.264710071,0.639659997,0.593266207,113.4581299,12.83950806,file03.pdf,4,One local point of entry to access seamless electronic library services and reso,Body_Text
-1.108433616,1,7,0,0,0.147058337,0.798262471,0.329621595,12.32067871,125.6131592,file03.pdf,4,For each Ontario student it could mean:,H4
+1.108433616,1,7,0,0,0.147058337,0.798262471,0.329621595,12.32067871,125.6131592,file03.pdf,4,For each Ontario student it could mean:,H3
 1.108433616,0,28,0,0,0.264710096,0.814473932,0.564030691,50.23205566,12.83947754,file03.pdf,4,"One local point of entry to quality, curriculum- based electronic information re",Body_Text
 0.831325212,1,12,0,0,0.147125169,0.922954367,0.71014711,12.68103027,85.91650391,file03.pdf,4,RFP: To Develop the Ontario Digital Library Business Plan March 2003 5,Body_Text
 1.108433616,0,22,0,0,0.26477158,0.091172748,0.562704174,24.91725159,-658.7710419,file03.pdf,5,"Confidence that the services and resources people are using are credible, availa",Body_Text
-1.108433616,1,7,0,0,0.147119821,0.138901238,0.319754096,12.32063293,37.80096436,file03.pdf,5,For each Ontario library it could mean:,H4
+1.108433616,1,7,0,0,0.147119821,0.138901238,0.319754096,12.32063293,37.80096436,file03.pdf,5,For each Ontario library it could mean:,H3
 1.108433616,0,57,0,0,0.26477158,0.155112777,0.591789121,88.14332581,12.83953857,file03.pdf,5,One point of entry for themselves and their clientele to quality electronic reso,Body_Text
-1.108433616,1,7,0,0,0.147119796,0.282672169,0.352675806,12.32063293,101.0270386,file03.pdf,5,For the Ontario government it could mean:,H4
+1.108433616,1,7,0,0,0.147119796,0.282672169,0.352675806,12.32063293,101.0270386,file03.pdf,5,For the Ontario government it could mean:,H3
 1.108433616,0,82,0,0,0.26477158,0.298730349,0.586730982,113.5795135,12.71807861,file03.pdf,5,"A point of entry to information services and resources for all Ontario citizens,",Body_Text
 1.108433616,0,40,0,0,0.147119821,0.458406044,0.711367676,37.63537598,126.46315,file03.pdf,5,ODL will be an incorporated non-profit organization governed by a Board of Direc,Body_Text
 1.108433616,0,19,0,0,0.147137848,0.521579396,0.710940255,24.91729736,50.03329468,file03.pdf,5,"More information regarding the envisioned phasing, funding and resources require",Body_Text
