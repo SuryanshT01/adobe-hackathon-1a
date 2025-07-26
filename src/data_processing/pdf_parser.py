@@ -10,6 +10,7 @@ def is_scanned_page(page: fitz.Page) -> bool:
     text blocks. A page with fewer than 3 text blocks is a strong indicator
     of being an image-based or scanned page.
     """
+    #.get_text("blocks") is a fast and reliable way to check for text content.[9]
     return len(page.get_text("blocks")) < 3
 
 def ocr_page_to_blocks(page: fitz.Page, page_num: int) -> List[Dict[str, Any]]:
@@ -20,47 +21,52 @@ def ocr_page_to_blocks(page: fitz.Page, page_num: int) -> List[Dict[str, Any]]:
     print(f"[INFO] OCR triggered for page {page_num}.")
     final_blocks = []
     try:
+        # Render page to a high-resolution image for better OCR accuracy.[10]
         pix = page.get_pixmap(dpi=300)
         img = Image.open(io.BytesIO(pix.tobytes("png")))
+        
+        # Use image_to_data to get detailed info including bounding boxes and structure.
         ocr_data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+        
         if not ocr_data or not ocr_data.get('text'):
             return []
+
+        # Group words by block and line number provided by Tesseract
         lines_in_block = {}
         for i in range(len(ocr_data['text'])):
             text = ocr_data['text'][i].strip()
             if not text:
                 continue
-            block_num = ocr_data['block_num'][i]
-            line_num = ocr_data['line_num'][i]
+
+            block_num, line_num = ocr_data['block_num'][i], ocr_data['line_num'][i]
             x, y, w, h = ocr_data['left'][i], ocr_data['top'][i], ocr_data['width'][i], ocr_data['height'][i]
             word_bbox = (x, y, x + w, y + h)
+            
             span = {
-                'text': text + " ",
-                'size': 12.0,
-                'font': 'OCR-Default',
-                'bbox': word_bbox
+                'text': text + " ", 'size': 12.0, 'font': 'OCR-Default', 'bbox': word_bbox
             }
+            
             key = (block_num, line_num)
             if key not in lines_in_block:
                 lines_in_block[key] = {'spans': [], 'bbox': list(word_bbox)}
+            
             lines_in_block[key]['spans'].append(span)
-            # Expand line bbox
-            lines_in_block[key]['bbox'][0] = min(lines_in_block[key]['bbox'][0], word_bbox[0])
-            lines_in_block[key]['bbox'][1] = min(lines_in_block[key]['bbox'][1], word_bbox[1])
-            lines_in_block[key]['bbox'][2] = max(lines_in_block[key]['bbox'][2], word_bbox[2])
-            lines_in_block[key]['bbox'][3] = max(lines_in_block[key]['bbox'][3], word_bbox[3])
+            # Expand line bbox to encompass all words in it
+            lines_in_block[key]['bbox'] = [
+                min(lines_in_block[key]['bbox'][0], word_bbox[0]),
+                min(lines_in_block[key]['bbox'][1], word_bbox[1]),
+                max(lines_in_block[key]['bbox'][2], word_bbox[2]),
+                max(lines_in_block[key]['bbox'][3], word_bbox[3]),
+            ]
+
+        # Reconstruct the final block structure from the grouped lines
         for (block_num, line_num), line_data in lines_in_block.items():
             final_blocks.append({
-                'type': 0,
-                'bbox': tuple(line_data['bbox']),
-                'page_num': page_num,
-                'source': 'ocr',
-                'lines': [{
-                    'spans': line_data['spans'],
-                    'bbox': tuple(line_data['bbox'])
-                }]
+                'type': 0, 'bbox': tuple(line_data['bbox']), 'page_num': page_num, 'source': 'ocr',
+                'lines': [{'spans': line_data['spans'], 'bbox': tuple(line_data['bbox'])}]
             })
         return final_blocks
+
     except Exception as e:
         print(f" OCR failed for page {page_num}: {e}")
         return []
@@ -75,9 +81,12 @@ def extract_text_blocks(pdf_path: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"Error opening PDF {pdf_path}: {e}")
         return []
+
     all_blocks = []
     for page_num, page in enumerate(doc):
         page_height = page.rect.height
+        
+        # CRITICAL FIX: Apply OCR check to every page, not just the first.
         if is_scanned_page(page):
             ocr_blocks = ocr_page_to_blocks(page, page_num)
             if ocr_blocks:
@@ -92,5 +101,6 @@ def extract_text_blocks(pdf_path: str) -> List[Dict[str, Any]]:
                     block['source'] = 'pymupdf'
                     block['page_height'] = page_height
                     all_blocks.append(block)
+    
     doc.close()
     return all_blocks
