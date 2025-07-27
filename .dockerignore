@@ -1,0 +1,21 @@
+# Git
+.git/
+.gitignore
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE / OS specific
+.vscode/
+.idea/
+*.DS_Store
+
+# Project artifacts & local data
+notebooks/
+data/
+output/
+*.log
