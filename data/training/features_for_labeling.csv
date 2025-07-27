@@ -1,4 +1,4 @@
-font_size_ratio,is_bold,word_count,is_all_caps,is_title_case,x_position_norm,y_position_norm,block_width_norm,block_height,space_above,pdf_file,page_num,text_preview,label
+font_size_ratio,is_bold,word_count,is_all_caps,is_title_case,x_position_norm,y_position_norm,block_width_norm,block_height,space_above,"pdf_file=VALUE(MID(A1,5,LEN(A1)-4))",page_num,text_preview,label
 1.315067167,1,2,0,1,0.119046489,0.124000147,0.088519005,20.42899323,104.3944855,file06.pdf,0,Dune 3D,Body_Text
 0.999999908,0,15,0,0,0.119046489,0.169077997,0.746784448,15.53456116,37.95059204,file06.pdf,0,"Dune 3D is a parametric 3D CAD application that supports STEP import/export, fil",Body_Text
 1.09589238,1,1,0,1,0.119046489,0.613848482,0.096078613,17.02423096,374.4478302,file06.pdf,0,Motivation,H1
