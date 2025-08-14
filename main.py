@@ -32,6 +32,63 @@ ORIGINAL_TEST_FILES = [
     'file05.pdf',
 ]
 
+def associate_content_to_headings(headings: List[Dict[str, Any]], all_content_blocks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Associates paragraph text content with each heading.
+
+    The content for a heading is defined as all text blocks that appear after it
+    but before the next heading.
+    """
+    if not headings:
+        return []
+
+    # Create a set of heading identifiers (page, y_pos) for quick lookup
+    heading_positions = {(h['page'], h['y_pos']) for h in headings}
+
+    # Filter out blocks that are already identified as headings from our potential content blocks.
+    # These are the paragraphs, list items, etc.
+    paragraph_blocks = [
+        b for b in all_content_blocks
+        if (b.get('page_num', -1), b.get('bbox', [0, 0, 0, 0])[1]) not in heading_positions
+    ]
+
+    # Initialize content for each heading
+    for h in headings:
+        h['content'] = ""
+
+    # Iterate through headings to assign content blocks
+    for i, current_heading in enumerate(headings):
+        content_for_heading = []
+        
+        # Define the start boundary (the current heading's position)
+        start_page = current_heading['page']
+        start_y = current_heading['y_pos']
+
+        # Define the end boundary (the next heading's position)
+        end_page, end_y = float('inf'), float('inf')
+        if i + 1 < len(headings):
+            next_heading = headings[i+1]
+            end_page = next_heading['page']
+            end_y = next_heading['y_pos']
+
+        # Find all paragraph blocks that fall between the current and next heading
+        for block in paragraph_blocks:
+            block_page = block['page_num']
+            block_y = block['bbox'][1]
+
+            is_after_start = (block_page > start_page) or (block_page == start_page and block_y > start_y)
+            is_before_end = (block_page < end_page) or (block_page == end_page and block_y < end_y)
+
+            if is_after_start and is_before_end:
+                block_text = " ".join(span['text'] for line in block.get('lines', []) for span in line.get('spans', [])).strip()
+                if block_text:
+                    content_for_heading.append(block_text)
+        
+        # Join the collected paragraphs with a newline
+        current_heading['content'] = "\n".join(content_for_heading)
+
+    return headings
+
 def process_pdf(pdf_path: str) -> dict:
     """
     Main processing function for a single PDF file. This function orchestrates
@@ -148,14 +205,18 @@ def process_pdf(pdf_path: str) -> dict:
     print(f"  - Finalizing outline...")
     headings.sort(key=lambda x: (x['page'], x['y_pos']))
     
-    # Remove temporary keys and final text cleaning
-    for h in headings:
+    # Associate content with each heading
+    print(f"  - Associating content with headings...")
+    headings_with_content = associate_content_to_headings(headings, filtered_blocks)
+
+    # Remove temporary keys and perform final text cleaning
+    for h in headings_with_content:
         del h['y_pos']
         # Final text cleaning
         h['text'] = clean_heading_text(h['text'])
 
     # Apply hierarchical validation
-    final_outline = validate_hierarchy(headings)
+    final_outline = validate_hierarchy(headings_with_content)
     
     end_time = time.time()
     print(f"  - Completed in {end_time - start_time:.2f} seconds")
